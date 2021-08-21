@@ -14,6 +14,10 @@ or
 
 For linux add ```-lm -ldl```
 
+For Ultrix (RISC), run
+
+```cc -O2 lisp500.c -o lisp500 -lm```
+
 (It's really nothing but assumptions that the word size is 32 bits so -m32 is required.)
 
 ## running
