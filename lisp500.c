@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined(ultrix)
+#include <filehdr.h>
+#include <syms.h>
+#include <ldfcn.h>
+#endif
 #ifdef _WIN32
 #include <windows.h>
 #define X __declspec(dllexport)
@@ -305,7 +310,9 @@ lval luname(lval *f) { OSVERSIONINFO osvi;
 #else
 #include <sys/time.h>
 #include <unistd.h>
+#if !defined(ultrix)
 #include <dlfcn.h>
+#endif
 #include <sys/utsname.h>
 lval lmake_fs(lval *f) { int fd = open(o2z(f[1]), f[2] ? O_WRONLY|O_CREAT|O_TRUNC : O_RDONLY, 0600);
  return fd >= 0 ? ms(f, 4, 116, 1, fd, f[2], 0) : d2o(f, errno); }
@@ -318,8 +325,13 @@ lval lread_fs(lval *f) { int l = o2i(f[3]); l = read(o2s(f[1])[3], o2z(f[2])+l,
 lval lwrite_fs(lval *f) { int l = o2i(f[3]); l = write(o2s(f[1])[3],
  o2z(f[2]) + l, o2i(f[4]) - l); return l < 0 ? cons(f, errno, 0) : d2o(f, l); }
 lval lfinish_fs(lval *f) { fsync(o2s(f[1])[3]); return 0; }
+#if defined(ultrix)
+lval lfasl(lval *f) { void *h; lval (*s)(); ldopen(o2z(f[1]),h);
+  s = ldgetname(h, "init"); ldclose(h); return s(f); }
+#else
 lval lfasl(lval *f) { void *h; lval (*s)(); h = dlopen(o2z(f[1]), RTLD_NOW);
   s = dlsym(h, "init"); return s(f); }
+#endif
 lval luname(lval *f) { struct utsname un; uname(&un);
  f[1]=cons(f+1,strf(f+1,un.machine),0);
  f[1]=cons(f+1,strf(f+1,un.version),f[1]);
